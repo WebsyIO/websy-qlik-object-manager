@@ -1,0 +1,1 @@
+# websy-qlik-object-manager
