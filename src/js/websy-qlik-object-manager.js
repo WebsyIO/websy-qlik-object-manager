@@ -108,6 +108,9 @@ class WebsyQlikObjectManager {
   detachObject(objectConfig){
     objectConfig.attached = false
   }
+  normalizeId(id){
+    return id.replace(/\s:\\\//,'-')
+  }
   registerVisualisation(name, classDef){
     if (name.indexOf(/\s/)!==-1) {
       console.log("Failed to register Chart Extension. Chart name must not contain spaces.")

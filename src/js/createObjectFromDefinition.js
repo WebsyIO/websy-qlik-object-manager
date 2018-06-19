@@ -18,7 +18,7 @@ this.apps[objectConfig.app][method](objectConfig.definition).then(model=>{
   }
   else if (objectConfig.render && typeof objectConfig.render == "function"){
     objectConfig.vis = {}
-    objectConfig.render.call(objectConfig)
+    objectConfig.render.call(objectConfig, model)
     model.on("changed", ()=>{
       if (objectConfig.attached===true) {
         objectConfig.render.call(objectConfig, model)

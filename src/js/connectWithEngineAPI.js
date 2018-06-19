@@ -1,4 +1,6 @@
 // check for enigma.js
+let originalId = appConfig.id
+appConfig.id = this.normalizeId(appConfig.id)
 if (typeof enigma==="undefined") {
   callbackFn({
     error: "Enigma.js not found."
@@ -10,8 +12,8 @@ let config = {
   url: `${(appConfig.isSecure===true?"wss":"ws")}://${appConfig.host}:${appConfig.port}${appConfig.prefix}app/${appConfig.id}`
 }
 let session = enigma.create(config)
-config.open().then(global=>{
-  global.openDoc(appConfig.id).then(app=>{
+session.open().then(global=>{
+  global.openDoc(originalId).then(app=>{
     this.apps[appConfig.id] = app
     callbackFn()
   })

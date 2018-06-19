@@ -65,7 +65,7 @@ class WebsyQlikObjectManager {
       url: `${(appConfig.isSecure===true?"wss":"ws")}://${appConfig.host}:${appConfig.port}${appConfig.prefix}app/${appConfig.id}`
     }
     let session = enigma.create(config)
-    config.open().then(global=>{
+    session.open().then(global=>{
       global.openDoc(appConfig.id).then(app=>{
         this.apps[appConfig.id] = app
         callbackFn()
@@ -147,7 +147,7 @@ class WebsyQlikObjectManager {
       }
       else if (objectConfig.render && typeof objectConfig.render == "function"){
         objectConfig.vis = {}
-        objectConfig.render.call(objectConfig)
+        objectConfig.render.call(objectConfig, model)
         model.on("changed", ()=>{
           if (objectConfig.attached===true) {
             objectConfig.render.call(objectConfig, model)

@@ -85,7 +85,7 @@ var WebsyQlikObjectManager = function () {
         url: (appConfig.isSecure === true ? "wss" : "ws") + "://" + appConfig.host + ":" + appConfig.port + appConfig.prefix + "app/" + appConfig.id
       };
       var session = enigma.create(config);
-      config.open().then(function (global) {
+      session.open().then(function (global) {
         global.openDoc(appConfig.id).then(function (app) {
           _this3.apps[appConfig.id] = app;
           callbackFn();
@@ -168,7 +168,7 @@ var WebsyQlikObjectManager = function () {
           });
         } else if (objectConfig.render && typeof objectConfig.render == "function") {
           objectConfig.vis = {};
-          objectConfig.render.call(objectConfig);
+          objectConfig.render.call(objectConfig, model);
           model.on("changed", function () {
             if (objectConfig.attached === true) {
               objectConfig.render.call(objectConfig, model);
