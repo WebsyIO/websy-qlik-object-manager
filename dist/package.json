@@ -1,0 +1,11 @@
+{
+  "name": "websy-qlik-object-manager",
+  "version": "0.0.1",
+  "description": "Tool for managing Qlik Objects in a single page web application.",
+  "main": "websy-qlik-object-manager.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Websy Limited",
+  "license": "MIT"
+}
