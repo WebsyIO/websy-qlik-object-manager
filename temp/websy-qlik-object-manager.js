@@ -9,7 +9,7 @@ class WebsyQlikObjectManager {
     this.connectedCallback = callbackFn
     if (options.visualisationPlugins && options.visualisationPlugins.length > 0) {
       for (let i = 0; i < options.visualisationPlugins.length; i++) {
-        this.registerVisualisation(options.visualisationPlugins[i].name, options.visualisationPlugins[i].definition)
+        this.registerVisualisation(options.visualisationPlugins[i].id, options.visualisationPlugins[i].definition)
       }
     }
     this.options = Object.assign({}, defaults, options)
@@ -39,6 +39,8 @@ class WebsyQlikObjectManager {
   }
   connectWithCapabilityAPI(appConfig, callbackFn){
     // check for requirejs
+    let originalId = appConfig.id
+    appConfig.id = this.normalizeId(appConfig.id)
     if (typeof require==="undefined") {
       callbackFn({
         error: "RequireJs not found."
@@ -47,13 +49,15 @@ class WebsyQlikObjectManager {
     }
     require.config({baseUrl: `${(appConfig.isSecure===true?"https":"http")}://${appConfig.host}:${appConfig.port}${appConfig.prefix}resources`})
     require(["js/qlik"], qlik=>{
-      this.apps[appConfig.id] = qlik.openApp(appConfig.id, appConfig)
+      this.apps[appConfig.id] = qlik.openApp(originalId, appConfig)
       callbackFn()
     })
 
   }
   connectWithEngineAPI(appConfig, callbackFn){
     // check for enigma.js
+    let originalId = appConfig.id
+    appConfig.id = this.normalizeId(appConfig.id)
     if (typeof enigma==="undefined") {
       callbackFn({
         error: "Enigma.js not found."
@@ -66,7 +70,7 @@ class WebsyQlikObjectManager {
     }
     let session = enigma.create(config)
     session.open().then(global=>{
-      global.openDoc(appConfig.id).then(app=>{
+      global.openDoc(originalId).then(app=>{
         this.apps[appConfig.id] = app
         callbackFn()
       })
@@ -138,7 +142,7 @@ class WebsyQlikObjectManager {
       objectConfig.objectId = model.id
       objectConfig.attached = true
       if (this.supportedChartTypes.indexOf(objectConfig.definition.qInfo.qType)!==-1) {
-        objectConfig.vis = new this.chartLibrary[objectConfig.definition.qInfo.qType](objectConfig.elementId, model, {})
+        objectConfig.vis = new this.chartLibrary[objectConfig.definition.qInfo.qType](objectConfig.elementId, model)
         model.on("changed", ()=>{
           if (objectConfig.attached===true) {
             objectConfig.vis.render()
@@ -165,6 +169,9 @@ class WebsyQlikObjectManager {
   }
   detachObject(objectConfig){
     objectConfig.attached = false
+  }
+  normalizeId(id){
+    return id.replace(/\s:\\\//,'-')
   }
   registerVisualisation(name, classDef){
     if (name.indexOf(/\s/)!==-1) {

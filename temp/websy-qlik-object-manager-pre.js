@@ -17,7 +17,7 @@ var WebsyQlikObjectManager = function () {
     this.connectedCallback = callbackFn;
     if (options.visualisationPlugins && options.visualisationPlugins.length > 0) {
       for (var i = 0; i < options.visualisationPlugins.length; i++) {
-        this.registerVisualisation(options.visualisationPlugins[i].name, options.visualisationPlugins[i].definition);
+        this.registerVisualisation(options.visualisationPlugins[i].id, options.visualisationPlugins[i].definition);
       }
     }
     this.options = Object.assign({}, defaults, options);
@@ -56,6 +56,8 @@ var WebsyQlikObjectManager = function () {
       var _this2 = this;
 
       // check for requirejs
+      var originalId = appConfig.id;
+      appConfig.id = this.normalizeId(appConfig.id);
       if (typeof require === "undefined") {
         callbackFn({
           error: "RequireJs not found."
@@ -64,7 +66,7 @@ var WebsyQlikObjectManager = function () {
       }
       require.config({ baseUrl: (appConfig.isSecure === true ? "https" : "http") + "://" + appConfig.host + ":" + appConfig.port + appConfig.prefix + "resources" });
       require(["js/qlik"], function (qlik) {
-        _this2.apps[appConfig.id] = qlik.openApp(appConfig.id, appConfig);
+        _this2.apps[appConfig.id] = qlik.openApp(originalId, appConfig);
         callbackFn();
       });
     }
@@ -74,6 +76,8 @@ var WebsyQlikObjectManager = function () {
       var _this3 = this;
 
       // check for enigma.js
+      var originalId = appConfig.id;
+      appConfig.id = this.normalizeId(appConfig.id);
       if (typeof enigma === "undefined") {
         callbackFn({
           error: "Enigma.js not found."
@@ -86,7 +90,7 @@ var WebsyQlikObjectManager = function () {
       };
       var session = enigma.create(config);
       session.open().then(function (global) {
-        global.openDoc(appConfig.id).then(function (app) {
+        global.openDoc(originalId).then(function (app) {
           _this3.apps[appConfig.id] = app;
           callbackFn();
         });
@@ -160,7 +164,7 @@ var WebsyQlikObjectManager = function () {
         objectConfig.objectId = model.id;
         objectConfig.attached = true;
         if (_this4.supportedChartTypes.indexOf(objectConfig.definition.qInfo.qType) !== -1) {
-          objectConfig.vis = new _this4.chartLibrary[objectConfig.definition.qInfo.qType](objectConfig.elementId, model, {});
+          objectConfig.vis = new _this4.chartLibrary[objectConfig.definition.qInfo.qType](objectConfig.elementId, model);
           model.on("changed", function () {
             if (objectConfig.attached === true) {
               objectConfig.vis.render();
@@ -193,6 +197,11 @@ var WebsyQlikObjectManager = function () {
     key: "detachObject",
     value: function detachObject(objectConfig) {
       objectConfig.attached = false;
+    }
+  }, {
+    key: "normalizeId",
+    value: function normalizeId(id) {
+      return id.replace(/\s:\\\//, '-');
     }
   }, {
     key: "registerVisualisation",

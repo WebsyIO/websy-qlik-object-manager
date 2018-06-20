@@ -88,11 +88,11 @@ let config = {
   },
   visualisationPlugins: [
     {
-      name: "echarts-linechart",
+      id: "echarts-linechart",
       definition: WebsyEChartsLinechart
     },
     {
-      name: "picasso-barchart",
+      id: "picasso-barchart",
       definition: WebsyPicassoWrapper
     }
   ]

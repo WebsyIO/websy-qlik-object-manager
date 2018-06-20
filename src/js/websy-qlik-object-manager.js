@@ -9,7 +9,7 @@ class WebsyQlikObjectManager {
     this.connectedCallback = callbackFn
     if (options.visualisationPlugins && options.visualisationPlugins.length > 0) {
       for (let i = 0; i < options.visualisationPlugins.length; i++) {
-        this.registerVisualisation(options.visualisationPlugins[i].name, options.visualisationPlugins[i].definition)
+        this.registerVisualisation(options.visualisationPlugins[i].id, options.visualisationPlugins[i].definition)
       }
     }
     this.options = Object.assign({}, defaults, options)
