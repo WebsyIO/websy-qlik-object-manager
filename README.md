@@ -85,6 +85,46 @@ const config = {
 }
 ```
 
+#### Defining Actions
+It is possible to execute Engine API methods simply by adding a configuration to the `actions` property of the configuration. Each action should contain these top level properties:
+* **app** - (array) An array of app id's to use.
+* **elementId** - (string) The id of the HTML element that will be responsible for executing the action.
+* **event** - (string) The event listener to assign to the element, for example `click` or `mouseover`.
+* **items** - (array) An array of objects describing the actions to perform. Each item can have the following:
+  * **method** - (string) The Qlik Engine API method to execute.
+	* **params** - (array) An array of parameters to pass to the method.
+	* **field** - (string) The field to use if working with methods such as `selectValues`.
+
+``` javascript
+const config = {
+	actions: [
+		{
+			app: ["<some-guid>", "<some-guid>"],
+			elementId: "button1",
+			event: "click",
+			items: [
+				{
+					method: "selectValues",
+					field: "Country",
+					params: [[{qText: "US"}], false]
+				}
+			]
+		},
+		{
+			app: ["<some-guid>", "<some-guid>"],
+			elementId: "button2",
+			event: "click",
+			items: [
+				{
+					method: "clearAll",
+					params: []
+				}
+			]
+		}
+	]
+}
+```
+
 #### Defining Objects
 Objects are grouped into `views`, which allow you to design for performance. The `views` property on the configuration is an object where each key represents the id of the view. The value should be an array of `objects`, with a combination of these properties:
 * **app** - The id of the application the object belongs to. This should match the id of one of the `apps` specified in the configuration.
@@ -93,6 +133,7 @@ Objects are grouped into `views`, which allow you to design for performance. The
 * **type** - For use with the Qlik `Visualization API`, determines the object type i.e. barchart. Can **only** be used with the `Qlik Capability APIs` and should be accompanied by the `columns` and `options` properties.
 * **columns** - For use with the Qlik `Visualization API`, determines the columns to be used in the visualisation. Can **only** be used with the `Qlik Capability APIs` and should be accompanied by the `type` and `options` properties.
 * **options** - For use with the Qlik `Visualization API`, allows additional options to be set. Can **only** be used with the `Qlik Capability APIs` and should be accompanied by the `type` and `columns` properties.
+* **help** - (string) The text to be used as the help text for the object. When this property exists a `?` will appear in the top right-hand corner of the object. The help text is shown either on `mouseover` or `click` of the `?` (based on the `helpEvent` property). The help will automatically disappear on `mouseout`.
 * **definition** - Allows you to provide the full definition of a Generic Object. The `qType` property will be used to find the corresponding custom visualisation to use for rendering. If no visualisation is found/exists, should be accompanied by the `render` property.
 * **render** - Allows you to provide a custom function to use when the object should be rendered. This function receives the model of the `Generic Object` as a parameter and the `this` value represents this collection of properties.
 ``` javascript

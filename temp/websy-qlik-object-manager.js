@@ -1,7 +1,8 @@
 class WebsyQlikObjectManager {
   constructor(options, callbackFn) {
     const defaults = {
-      api: "engine"
+      api: "engine",
+			helpEvent: "mouseover"
     }
     this.apps = {}
     this.supportedChartTypes = []
@@ -13,8 +14,64 @@ class WebsyQlikObjectManager {
       }
     }
     this.options = Object.assign({}, defaults, options)
+		this.prep()
     this.connectToApps()
   }
+	buildChildElement(elementId, text){
+		let html = `<article id="${elementId}_vis" class="websy-vis-article"></article>`
+		if (text && text!=="") {
+			html += `
+				<i class="websy-vis-help-listener" data-element="${elementId}"></i>
+				<div id="${elementId}_help" class="websy-vis-help"><span>${text || ""}</span></div>
+			`
+		}
+		return html
+	}
+	prep() {
+		for (let view in this.options.views) {
+			// sort out the elements in each view
+			for (let o = 0; o < this.options.views[view].length; o++) {
+				let config = this.options.views[view][o]
+				let el = document.getElementById(config.elementId)
+				if (el) {
+					el.innerHTML += this.buildChildElement(config.elementId, config.help)
+					if (config.help && config.help!=="") {
+						el.addEventListener(this.options.helpEvent, this.handleEvent.bind(this))
+						el.addEventListener("mouseout", this.handleEvent.bind(this))
+					}
+				}
+			}
+		}
+		// setup  the event listeners for the actions
+		// actions should not have a visualisation in the same property structure
+		for (let a = 0; a < this.options.actions.length; a++) {
+			if (!Array.isArray(this.options.actions[a].app)) {
+				this.options.actions[a].app = [this.options.actions[a].app]
+			}
+			let el = document.getElementById(this.options.actions[a].elementId)
+			if (el) {
+				el.addEventListener(this.options.actions[a].event, ()=>{
+					for (let p = 0; p < this.options.actions[a].app.length; p++) {
+						let appModel = this.apps[this.options.actions[a].app[p]].model
+						if (appModel.enigmaModel) {
+							appModel = appModel.enigmaModel
+						}
+						for (let i = 0; i < this.options.actions[a].items.length; i++) {
+							let item = this.options.actions[a].items[i]
+							if (item.field) {
+								appModel.getField(item.field).then(field=>{
+									field[item.method](...item.params)
+								})
+							}
+							else {
+								appModel[item.method](...item.params)
+							}
+						}
+					}
+				})
+			}
+		}
+	}
   connectToApps(){
     let connectedApps = 0
     let method = "connectWithEngineAPI"
@@ -128,8 +185,16 @@ class WebsyQlikObjectManager {
     }
   }
   getObjectFromId(objectConfig){
-    this.apps[objectConfig.app].getObject(objectConfig.elementId, objectConfig.objectId)
+    this.apps[objectConfig.app].getObject(`${objectConfig.elementId}_vis`, objectConfig.objectId)
   }
+	handleEvent(event) {
+		if (event.target.classList.contains("websy-vis-help-listener")) {
+			let elementId = event.target.attributes["data-element"]
+			if (elementId.value) {
+				this.toggleHelp(`${elementId.value}_help`)
+			}
+		}
+	}
   createObjectFromDefinition(objectConfig){
     let method
     if (this.options.api=="engine") {
@@ -142,7 +207,7 @@ class WebsyQlikObjectManager {
       objectConfig.objectId = model.id
       objectConfig.attached = true
       if (this.supportedChartTypes.indexOf(objectConfig.definition.qInfo.qType)!==-1) {
-        objectConfig.vis = new this.chartLibrary[objectConfig.definition.qInfo.qType](objectConfig.elementId, model)
+        objectConfig.vis = new this.chartLibrary[objectConfig.definition.qInfo.qType](`${objectConfig.elementId}_vis`, model)
         model.on("changed", ()=>{
           if (objectConfig.attached===true) {
             objectConfig.vis.render()
@@ -162,10 +227,14 @@ class WebsyQlikObjectManager {
 
   }
   createObjectWithVisualizationAPI(objectConfig){
-    this.apps[objectConfig.app].visualization.create(objectConfig.type, objectConfig.columns, objectConfig.options).then(viz=>viz.show(objectConfig.elementId))
+    this.apps[objectConfig.app].visualization.create(objectConfig.type, objectConfig.columns, objectConfig.options).then(viz=>viz.show(`${objectConfig.elementId}_vis`))
   }
   destroyObjectFromId(objectConfig){
-    this.apps[objectConfig.app].destroySessionObject(objectConfig.elementId, objectConfig.objectId)
+		let hostEl = document.getElementById(`${objectConfig.elementId}_vis`)
+		if (hostEl) {
+			hostEl.innerHTML = ""
+		}
+    this.apps[objectConfig.app].destroySessionObject(objectConfig.objectId)
   }
   detachObject(objectConfig){
     objectConfig.attached = false
@@ -173,6 +242,24 @@ class WebsyQlikObjectManager {
   normalizeId(id){
     return id.replace(/\s:\\\//,'-')
   }
+	showHelp(elementId) {
+		let el = document.getElementById(elementId)
+		if (el) {
+			el.classList.add("active")
+		}
+	}
+	hideHelp(elementId) {
+		let el = document.getElementById(elementId)
+		if (el) {
+			el.classList.remove("active")
+		}
+	}
+	toggleHelp(elementId) {
+		let el = document.getElementById(elementId)
+		if (el) {
+			el.classList.toggle("active")
+		}
+	}
   registerVisualisation(name, classDef){
     if (name.indexOf(/\s/)!==-1) {
       console.log("Failed to register Chart Extension. Chart name must not contain spaces.")
