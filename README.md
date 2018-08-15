@@ -177,7 +177,7 @@ const config = {
             }]
           }
         },
-        render: (model)=>{
+        render: function (model) {
           model.getLayout().then(layout=>{
             document.getElementById(this.elementId).innerHTML = JSON.stringify(layout)
           })
